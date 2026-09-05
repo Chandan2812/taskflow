@@ -1,17 +1,28 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const swaggerUi = require("swagger-ui-express");
+
 const authRoutes = require("./auth/auth.routes");
 const projectRoutes = require("./project/project.routes");
 const taskRoutes = require("./task/task.routes");
-const errorHandler = require("./middleware/error.middleware");
 const userRoutes = require("./user/user.routes");
-const swaggerUi = require("swagger-ui-express");
+const errorHandler = require("./middleware/error.middleware");
 const swaggerSpec = require("./swagger");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://taskflow-alpha-amber.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+  }),
+);
+
 app.use(helmet());
 app.use(express.json());
 
