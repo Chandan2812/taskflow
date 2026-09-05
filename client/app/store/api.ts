@@ -6,7 +6,7 @@ export const api = createApi({
   tagTypes: ["Project", "Task"],
 
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
 
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as {
