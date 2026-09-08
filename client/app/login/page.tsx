@@ -5,6 +5,7 @@ import { useLoginMutation } from "../store/authApi";
 import { useAuth } from "../store/useAuth";
 import { useRouter } from "next/navigation";
 import { saveAuth } from "../store/authStorage";
+import { ArrowRight, Layers3 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,51 +32,80 @@ export default function LoginPage() {
       router.push("/");
 
       console.log("Login successful:", response.data.user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
       console.log("Login error details:", JSON.stringify(error, null, 2));
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md p-6">
-        <h1 className="text-3xl font-bold mb-6">Login to TaskFlow</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded-lg px-4 py-3"
-            required
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded-lg px-4 py-3"
-            required
-          />
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-lg bg-black text-white py-3 disabled:opacity-50"
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <a href="/register" className="font-medium text-black underline">
-            Create an account
-          </a>
-        </p>
-      </div>
+    <main className="auth-page">
+      <section className="auth-art">
+        <div className="auth-art-content">
+          <div className="auth-brand">
+            <Layers3 size={22} /> TaskFlow
+          </div>
+          <div className="auth-art-copy">
+            <h2>Turn busy into beautifully clear.</h2>
+            <p>
+              A quiet home for ambitious work. Organize the moving parts, then
+              give your attention to what matters next.
+            </p>
+            <div className="auth-art-quote">
+              “Clarity is a competitive advantage.”
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="auth-panel">
+        <div className="auth-form-wrap">
+          <p className="auth-kicker">Welcome back</p>
+          <h1 className="auth-title">Good to see you.</h1>
+          <p className="auth-subtitle">
+            Sign in to pick up exactly where you left off.
+          </p>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <label className="field-label">
+              Email
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="field-control"
+                required
+              />
+            </label>
+            <label className="field-label">
+              Password
+              <input
+                type="password"
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="field-control"
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="primary-button"
+            >
+              {isLoading ? (
+                "Signing in..."
+              ) : (
+                <>
+                  Enter workspace <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
+          <p className="auth-link">
+            New to TaskFlow? <a href="/register">Create an account</a>
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

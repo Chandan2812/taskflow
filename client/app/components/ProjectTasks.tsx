@@ -11,6 +11,19 @@ import {
 import { useGetUsersQuery } from "../store/userApi";
 import { useAppDispatch } from "../store/hooks";
 import socket from "../lib/socket";
+import {
+  CalendarDays,
+  Check,
+  CircleDot,
+  ListFilter,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  X,
+} from "lucide-react";
+import type { Task } from "../store/task.types";
 
 interface ProjectTasksProps {
   projectId: number;
@@ -64,7 +77,7 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
   useEffect(() => {
     socket.connect();
 
-    const handleTaskCreated = (payload: { task: any }) => {
+    const handleTaskCreated = (payload: { task: Task }) => {
       if (payload.task.projectId !== projectId) {
         return;
       }
@@ -82,7 +95,7 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
       );
     };
 
-    const handleTaskUpdated = (payload: { task: any }) => {
+    const handleTaskUpdated = (payload: { task: Task }) => {
       if (payload.task.projectId !== projectId) {
         return;
       }
@@ -100,7 +113,7 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
       );
     };
 
-    const handleTaskDeleted = (payload: { task: any }) => {
+    const handleTaskDeleted = (payload: { task: Task }) => {
       if (payload.task.projectId !== projectId) {
         return;
       }
@@ -354,353 +367,291 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
   }
 
   return (
-    <div className="mt-4">
-      <h4 className="font-medium">Tasks</h4>
-
-      {/* Create Task */}
-      <form onSubmit={handleCreateTask} className="mt-3 space-y-3">
+    <div className="task-workspace">
+      <div className="task-toolbar">
+        <div className="task-count">
+          <span className="count-pill">{data?.data.length ?? 0}</span> Tasks{" "}
+          <span className="task-summary">
+            {sortedTasks.length !== (data?.data.length ?? 0)
+              ? `${sortedTasks.length} visible`
+              : "All on track"}
+          </span>
+        </div>
+        <ListFilter size={16} color="#a0a6b5" />
+      </div>
+      <form onSubmit={handleCreateTask} className="task-create">
         <input
           type="text"
-          placeholder="Task title"
+          placeholder="Add a task..."
           value={taskTitle}
           onChange={(e) => setTaskTitle(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
+          className="field-control"
           required
         />
-
-        <textarea
-          placeholder="Task description"
-          value={taskDescription}
-          onChange={(e) => setTaskDescription(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
-          rows={2}
-        />
-
-        {/* Assign To */}
         <select
           value={assignedTo ?? ""}
           onChange={(e) =>
             setAssignedTo(e.target.value === "" ? null : Number(e.target.value))
           }
           disabled={isUsersLoading}
-          className="w-full border rounded-lg px-3 py-2"
+          className="field-control"
         >
-          <option value="">
-            {isUsersLoading ? "Loading users..." : "Assign To"}
-          </option>
-
+          <option value="">Assign to...</option>
           {usersData?.data.map((user) => (
             <option key={user.id} value={user.id}>
-              {user.name} ({user.email})
+              {user.name}
             </option>
           ))}
         </select>
-
-        {/* Due Date */}
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
+          className="field-control"
+          aria-label="Due date"
         />
-
         <button
           type="submit"
           disabled={isCreating}
-          className="rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50"
+          className="add-task-button"
+          title="Add task"
+          aria-label="Add task"
         >
-          {isCreating ? "Creating..." : "Add Task"}
+          {isCreating ? <CircleDot size={17} /> : <Plus size={18} />}
         </button>
       </form>
-
-      {/* Search + Filters + Sorting */}
-      <div className="mt-5 rounded-lg border bg-white p-3">
-        <div className="space-y-3">
-          {/* Search */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Search Tasks
-            </label>
-
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title or description..."
-              className="w-full border rounded-lg px-3 py-2"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {/* Status Filter */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Filter by Status
-              </label>
-
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as StatusFilter)
-                }
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="TODO">TODO</option>
-                <option value="IN_PROGRESS">IN PROGRESS</option>
-                <option value="DONE">DONE</option>
-              </select>
-            </div>
-
-            {/* Priority Filter */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Filter by Priority
-              </label>
-
-              <select
-                value={priorityFilter}
-                onChange={(e) =>
-                  setPriorityFilter(e.target.value as PriorityFilter)
-                }
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="ALL">All Priorities</option>
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-              </select>
-            </div>
-
-            {/* Assignee Filter */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Filter by Assignee
-              </label>
-
-              <select
-                value={assigneeFilter ?? ""}
-                onChange={(e) =>
-                  setAssigneeFilter(
-                    e.target.value === "" ? null : Number(e.target.value),
-                  )
-                }
-                disabled={isUsersLoading}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="">
-                  {isUsersLoading ? "Loading users..." : "All Assignees"}
-                </option>
-
-                {usersData?.data.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sorting */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Sort Tasks
-              </label>
-
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="NEWEST">Newest First</option>
-
-                <option value="OLDEST">Oldest First</option>
-
-                <option value="DUE_DATE">Due Date</option>
-
-                <option value="PRIORITY">Priority</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Clear Filters */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="rounded-lg border px-4 py-2"
-            >
-              Clear Filters
-            </button>
-          </div>
+      <div className="filter-row">
+        <div className="search-wrap">
+          <Search size={14} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tasks"
+            className="field-control"
+          />
         </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          className="field-control"
+        >
+          <option value="ALL">All status</option>
+          <option value="TODO">To do</option>
+          <option value="IN_PROGRESS">In progress</option>
+          <option value="DONE">Done</option>
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
+          className="field-control"
+        >
+          <option value="ALL">All priority</option>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+        </select>
+        <select
+          value={assigneeFilter ?? ""}
+          onChange={(e) =>
+            setAssigneeFilter(
+              e.target.value === "" ? null : Number(e.target.value),
+            )
+          }
+          disabled={isUsersLoading}
+          className="field-control"
+        >
+          <option value="">All people</option>
+          {usersData?.data.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as SortOption)}
+          className="field-control"
+        >
+          <option value="NEWEST">Newest</option>
+          <option value="OLDEST">Oldest</option>
+          <option value="DUE_DATE">Due date</option>
+          <option value="PRIORITY">Priority</option>
+        </select>
       </div>
-
-      {/* Task List */}
+      {(searchQuery ||
+        statusFilter !== "ALL" ||
+        priorityFilter !== "ALL" ||
+        assigneeFilter !== null ||
+        sortOption !== "NEWEST") && (
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="secondary-button"
+          style={{ marginBottom: 12 }}
+        >
+          <X size={13} /> Clear filters
+        </button>
+      )}
       {data?.data.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-500">No tasks yet.</p>
+        <div className="empty-state">
+          <Check size={23} />
+          <p>No tasks yet. Add the first step above.</p>
+        </div>
       ) : sortedTasks.length === 0 ? (
-        <p className="mt-4 text-sm text-gray-500">
-          No tasks match the current search or filters.
-        </p>
+        <div className="empty-state">
+          <Search size={23} />
+          <p>No tasks match these filters.</p>
+        </div>
       ) : (
-        <div className="mt-4 space-y-2">
-          {sortedTasks.map((task) => (
-            <div key={task.id} className="rounded-lg bg-gray-50 border p-3">
-              {editingTaskId === task.id ? (
-                <form onSubmit={handleUpdateTask} className="space-y-3">
-                  <input
-                    type="text"
-                    value={editTaskTitle}
-                    onChange={(e) => setEditTaskTitle(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                    required
-                  />
-
-                  <textarea
-                    value={editTaskDescription}
-                    onChange={(e) => setEditTaskDescription(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                    rows={2}
-                  />
-
-                  {/* Edit Assign To */}
-                  <select
-                    value={editAssignedTo ?? ""}
-                    onChange={(e) =>
-                      setEditAssignedTo(
-                        e.target.value === "" ? null : Number(e.target.value),
-                      )
-                    }
-                    disabled={isUsersLoading}
-                    className="w-full border rounded-lg px-3 py-2"
-                  >
-                    <option value="">
-                      {isUsersLoading ? "Loading users..." : "Unassigned"}
-                    </option>
-
-                    {usersData?.data.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} ({user.email})
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Edit Due Date */}
-                  <input
-                    type="date"
-                    value={editDueDate}
-                    onChange={(e) => setEditDueDate(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2"
-                  />
-
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isUpdating}
-                      className="rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50"
-                    >
-                      {isUpdating ? "Saving..." : "Save Changes"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="rounded-lg border px-4 py-2"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h5 className="font-medium">{task.title}</h5>
-
-                      <p className="mt-1 text-sm text-gray-600">
-                        {task.description || "No description"}
-                      </p>
-
-                      {/* Assigned User */}
-                      <p className="mt-2 text-sm text-gray-500">
-                        Assigned to:{" "}
-                        {task.assignedTo
-                          ? usersData?.data.find(
-                              (user) => user.id === task.assignedTo,
-                            )?.name || "Unknown user"
-                          : "Unassigned"}
-                      </p>
-
-                      {/* Due Date */}
-                      <p className="mt-1 text-sm text-gray-500">
-                        Due date:{" "}
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString()
-                          : "No due date"}
-                      </p>
-
-                      {/* Priority */}
+        <div className="task-list">
+          {sortedTasks.map((task) => {
+            const assignee = task.assignedTo
+              ? usersData?.data.find((user) => user.id === task.assignedTo)
+                  ?.name || "Unknown user"
+              : "Unassigned";
+            return (
+              <div key={task.id} className="task-item">
+                {editingTaskId === task.id ? (
+                  <form onSubmit={handleUpdateTask} className="task-edit">
+                    <input
+                      type="text"
+                      value={editTaskTitle}
+                      onChange={(e) => setEditTaskTitle(e.target.value)}
+                      className="field-control"
+                      required
+                    />
+                    <textarea
+                      value={editTaskDescription}
+                      onChange={(e) => setEditTaskDescription(e.target.value)}
+                      className="field-control"
+                      rows={2}
+                    />
+                    <div className="task-create" style={{ marginBottom: 0 }}>
                       <select
-                        value={task.priority}
+                        value={editAssignedTo ?? ""}
                         onChange={(e) =>
-                          handlePriorityChange(
-                            task.id,
-                            e.target.value as "LOW" | "MEDIUM" | "HIGH",
+                          setEditAssignedTo(
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
                           )
                         }
-                        className="mt-2 border rounded-lg px-2 py-1 text-sm"
+                        className="field-control"
                       >
-                        <option value="LOW">LOW</option>
-                        <option value="MEDIUM">MEDIUM</option>
-                        <option value="HIGH">HIGH</option>
+                        <option value="">Unassigned</option>
+                        {usersData?.data.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        value={editDueDate}
+                        onChange={(e) => setEditDueDate(e.target.value)}
+                        className="field-control"
+                      />
+                    </div>
+                    <div className="task-edit-actions">
+                      <button
+                        type="submit"
+                        disabled={isUpdating}
+                        className="primary-button"
+                        style={{ width: "auto" }}
+                      >
+                        {isUpdating ? "Saving..." : "Save task"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="secondary-button"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <div className="task-title-row">
+                      <div className="task-content">
+                        <h5 className="task-title">{task.title}</h5>
+                        {task.description && (
+                          <p className="task-description">{task.description}</p>
+                        )}
+                        <div className="task-meta">
+                          <span className="meta-chip">
+                            <UserRound size={12} /> {assignee}
+                          </span>
+                          <span className="meta-chip">
+                            <CalendarDays size={12} />{" "}
+                            {task.dueDate
+                              ? new Date(task.dueDate).toLocaleDateString()
+                              : "No due date"}
+                          </span>
+                          <select
+                            value={task.priority}
+                            onChange={(e) =>
+                              handlePriorityChange(
+                                task.id,
+                                e.target.value as "LOW" | "MEDIUM" | "HIGH",
+                              )
+                            }
+                            className="priority-select"
+                          >
+                            <option value="LOW">Low priority</option>
+                            <option value="MEDIUM">Medium priority</option>
+                            <option value="HIGH">High priority</option>
+                          </select>
+                        </div>
+                      </div>
+                      <select
+                        value={task.status}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            task.id,
+                            e.target.value as "TODO" | "IN_PROGRESS" | "DONE",
+                          )
+                        }
+                        className={`status-select ${task.status === "TODO" ? "todo" : task.status === "DONE" ? "done" : ""}`}
+                      >
+                        <option value="TODO">To do</option>
+                        <option value="IN_PROGRESS">In progress</option>
+                        <option value="DONE">Done</option>
                       </select>
                     </div>
-
-                    {/* Status */}
-                    <select
-                      value={task.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          task.id,
-                          e.target.value as "TODO" | "IN_PROGRESS" | "DONE",
-                        )
-                      }
-                      className="border rounded-lg px-2 py-1 text-sm"
-                    >
-                      <option value="TODO">TODO</option>
-                      <option value="IN_PROGRESS">IN PROGRESS</option>
-                      <option value="DONE">DONE</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() =>
-                        handleEditClick(
-                          task.id,
-                          task.title,
-                          task.description,
-                          task.assignedTo,
-                          task.dueDate,
-                        )
-                      }
-                      className="rounded-lg border px-3 py-1.5 text-sm"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteTask(task.id)}
-                      disabled={isDeleting}
-                      className="rounded-lg bg-red-600 text-white px-3 py-1.5 text-sm disabled:opacity-50"
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+                    <div className="task-actions">
+                      <button
+                        onClick={() =>
+                          handleEditClick(
+                            task.id,
+                            task.title,
+                            task.description,
+                            task.assignedTo,
+                            task.dueDate,
+                          )
+                        }
+                        className="icon-button"
+                        title="Edit task"
+                        aria-label="Edit task"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        disabled={isDeleting}
+                        className="icon-button danger"
+                        title="Delete task"
+                        aria-label="Delete task"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -10,6 +10,15 @@ import {
   useUpdateProjectMutation,
 } from "./store/projectApi";
 import ProjectTasks from "./components/ProjectTasks";
+import {
+  FolderKanban,
+  Layers3,
+  LogOut,
+  Pencil,
+  Plus,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -123,8 +132,10 @@ export default function DashboardPage() {
 
   if (isAuthLoading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <main className="app-shell">
+        <div className="dashboard-wrap">
+          <p className="loading-line">Preparing your workspace...</p>
+        </div>
       </main>
     );
   }
@@ -133,124 +144,136 @@ export default function DashboardPage() {
     return null;
   }
 
+  const projects = data?.data ?? [];
+
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-
-            <p className="mt-2 text-gray-600">Welcome, {user.name}!</p>
+    <main className="app-shell">
+      <div className="dashboard-wrap">
+        <header className="topbar">
+          <div className="brand-lockup">
+            <Layers3 className="brand-mark" size={22} />
+            <span className="brand-name">TaskFlow</span>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border px-4 py-2"
-          >
-            Logout
-          </button>
-        </div>
-
-        {/* Create Project */}
-        <div className="mt-8 border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Create Project</h2>
-
-          <form onSubmit={handleCreateProject} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Project name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              className="w-full border rounded-lg px-4 py-3"
-              required
-            />
-
-            <textarea
-              placeholder="Project description"
-              value={projectDescription}
-              onChange={(e) => setProjectDescription(e.target.value)}
-              className="w-full border rounded-lg px-4 py-3"
-              rows={4}
-            />
-
+          <div className="user-chip">
+            <span>{user.name}</span>
+            <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
             <button
-              type="submit"
-              disabled={isCreating}
-              className="rounded-lg bg-black text-white px-5 py-3 disabled:opacity-50"
+              className="icon-button"
+              onClick={handleLogout}
+              title="Log out"
+              aria-label="Log out"
             >
-              {isCreating ? "Creating..." : "Create Project"}
+              <LogOut size={17} />
             </button>
-          </form>
-        </div>
+          </div>
+        </header>
 
-        {/* Projects */}
-        {isLoading && <p className="mt-6">Loading projects...</p>}
+        <section className="hero-row">
+          <div>
+            <p className="eyebrow">Your command center</p>
+            <h1 className="hero-title">Make space for meaningful work.</h1>
+            <p className="hero-copy">
+              Welcome back, {user.name.split(" ")[0]}. Keep projects clear,
+              tasks moving, and the next right thing close at hand.
+            </p>
+          </div>
+          <div className="stats-row">
+            <div className="stat-card">
+              <span className="stat-label">
+                <FolderKanban size={13} /> Projects
+              </span>
+              <strong className="stat-number">{projects.length}</strong>
+            </div>
+            <div className="stat-card">
+              <span className="stat-label">
+                <Sparkles size={13} /> Focus
+              </span>
+              <strong className="stat-number">Today</strong>
+            </div>
+          </div>
+        </section>
 
-        {isError && (
-          <p className="mt-6 text-red-600">Failed to load projects</p>
-        )}
-
-        {data?.data && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">My Projects</h2>
-
-            <div className="space-y-4">
-              {data.data.map((project) => (
-                <div key={project.id} className="border rounded-lg p-4">
+        <div className="content-grid">
+          <section>
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">Your projects</h2>
+                <p className="section-note">
+                  Everything important, in one calm view.
+                </p>
+              </div>
+            </div>
+            {isLoading && (
+              <p className="loading-line">Loading your projects...</p>
+            )}
+            {isError && (
+              <p className="error-line">
+                Couldn&apos;t load projects. Please try again.
+              </p>
+            )}
+            {!isLoading && !isError && projects.length === 0 && (
+              <div className="empty-state">
+                <FolderKanban size={26} />
+                <p>Your first project is waiting to be shaped.</p>
+              </div>
+            )}
+            <div className="project-list">
+              {projects.map((project) => (
+                <article key={project.id} className="project-card">
                   {editingProjectId === project.id ? (
-                    /* Edit Project */
-                    <form onSubmit={handleUpdateProject} className="space-y-4">
+                    <form
+                      onSubmit={handleUpdateProject}
+                      className="project-top field-stack"
+                    >
                       <input
                         type="text"
                         value={editProjectName}
                         onChange={(e) => setEditProjectName(e.target.value)}
-                        className="w-full border rounded-lg px-4 py-3"
+                        className="field-control"
                         required
                       />
-
                       <textarea
                         value={editProjectDescription}
                         onChange={(e) =>
                           setEditProjectDescription(e.target.value)
                         }
-                        className="w-full border rounded-lg px-4 py-3"
+                        className="field-control"
                         rows={3}
                       />
-
-                      <div className="flex gap-2">
+                      <div className="task-edit-actions">
                         <button
                           type="submit"
                           disabled={isUpdating}
-                          className="rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50"
+                          className="primary-button"
+                          style={{ width: "auto" }}
                         >
-                          {isUpdating ? "Saving..." : "Save Changes"}
+                          {isUpdating ? "Saving..." : "Save changes"}
                         </button>
-
                         <button
                           type="button"
                           onClick={handleCancelEdit}
-                          className="rounded-lg border px-4 py-2"
+                          className="secondary-button"
                         >
                           Cancel
                         </button>
                       </div>
                     </form>
                   ) : (
-                    /* Project Card */
                     <>
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-semibold text-lg">
-                            {project.name}
-                          </h3>
-
-                          <p className="text-gray-600 mt-1">
-                            {project.description || "No description"}
-                          </p>
+                      <div className="project-top">
+                        <div className="project-heading">
+                          <div className="project-icon">
+                            <FolderKanban size={18} />
+                          </div>
+                          <div>
+                            <h3 className="project-name">{project.name}</h3>
+                            <p className="project-description">
+                              {project.description ||
+                                "A fresh space for your next idea."}
+                            </p>
+                          </div>
                         </div>
-
-                        <div className="flex gap-2">
+                        <div className="project-actions">
                           <button
                             onClick={() =>
                               handleEditClick(
@@ -259,30 +282,73 @@ export default function DashboardPage() {
                                 project.description,
                               )
                             }
-                            className="rounded-lg border px-4 py-2"
+                            className="icon-button"
+                            title="Edit project"
+                            aria-label="Edit project"
                           >
-                            Edit
+                            <Pencil size={15} />
                           </button>
-
                           <button
                             onClick={() => handleDeleteProject(project.id)}
                             disabled={isDeleting}
-                            className="rounded-lg bg-red-600 text-white px-4 py-2 disabled:opacity-50"
+                            className="icon-button danger"
+                            title="Delete project"
+                            aria-label="Delete project"
                           >
-                            {isDeleting ? "Deleting..." : "Delete"}
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </div>
-
-                      {/* Tasks */}
                       <ProjectTasks projectId={project.id} />
                     </>
                   )}
-                </div>
+                </article>
               ))}
             </div>
-          </div>
-        )}
+          </section>
+          <aside className="side-panel">
+            <div className="form-heading">
+              <Plus size={19} />
+              <h2>Start a project</h2>
+            </div>
+            <form onSubmit={handleCreateProject} className="field-stack">
+              <label className="field-label">
+                Project name
+                <input
+                  type="text"
+                  placeholder="e.g. Website refresh"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="field-control"
+                  required
+                />
+              </label>
+              <label className="field-label">
+                Description
+                <textarea
+                  placeholder="What are you trying to make happen?"
+                  value={projectDescription}
+                  onChange={(e) => setProjectDescription(e.target.value)}
+                  className="field-control"
+                  rows={4}
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="primary-button"
+              >
+                {isCreating ? (
+                  "Creating..."
+                ) : (
+                  <>
+                    <Plus size={16} /> Create project
+                  </>
+                )}
+              </button>
+            </form>
+          </aside>
+        </div>
       </div>
     </main>
   );

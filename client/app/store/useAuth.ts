@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "./hooks";
 import { setCredentials, logout } from "./authSlice";
 import type { User } from "./auth.types";
 import { getStoredAuth, clearStoredAuth } from "./authStorage";
+import { api } from "./api";
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -26,7 +27,7 @@ export const useAuth = () => {
       );
     }
 
-    setIsAuthLoading(false);
+    queueMicrotask(() => setIsAuthLoading(false));
   }, [dispatch]);
 
   const saveCredentials = (userData: User, token: string) => {
@@ -40,6 +41,7 @@ export const useAuth = () => {
 
   const clearAuth = () => {
     dispatch(logout());
+    dispatch(api.util.resetApiState());
     clearStoredAuth();
   };
 
